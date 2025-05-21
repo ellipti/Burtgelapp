@@ -7,7 +7,11 @@ export default function UserListScreen() {
   const BASE_URL = 'https://burtgel-backend.onrender.com';
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/users`)
+    fetch(`${BASE_URL}/api/users`, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
       .then(res => res.json())
       .then(data => setUsers(data))
       .catch(err => console.error('❌ Хэрэглэгч авахад алдаа:', err.message));
