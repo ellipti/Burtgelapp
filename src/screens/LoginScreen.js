@@ -1,53 +1,93 @@
-import React, { useState } from "react";
-import { View, Text, Image, StyleSheet, Alert } from "react-native";
-import NButton from "../components/NButton";
-import NInput from "../components/NInput";
+import React, { useState, useContext } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, SafeAreaView, Image, Alert
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../contexts/AuthContext';
 
-export default function({ navigation }) {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginScreen() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useContext(AuthContext);
+  const navigation = useNavigation();
 
-  const loginHandler = () => {
-    Alert.alert(`Таны утас: ${phone}, нууц үг: ${password}`);
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Анхааруулга', 'Нэвтрэх нэр болон нууц үгээ оруулна уу');
+      return;
+    }
+
+    console.log('🔐 LOGIN ➤ Хэрэглэгч нэвтрэх гэж байна:', username);
+
+    try {
+      const userData = await login(username, password);
+
+      if (userData.role === 'admin') {
+        navigation.replace('AdminHome');
+      } else if (userData.role === 'user') {
+        navigation.replace('NormalUserHome');
+      } else {
+        Alert.alert('Алдаа', 'Энэ төрлийн хэрэглэгч нэвтрэх боломжгүй');
+      }
+
+    } catch (err) {
+      console.error('❌ LOGIN ➤ Нэвтрэх үед алдаа:', err.message);
+      Alert.alert('Сервер алдаа', err.message || 'Сервер холбогдож чадсангүй');
+    }
   };
 
   return (
-    <View>
-      <Image
-        style={{ width: "100%", height: "50%" }}
-        source={require("../../assets/img/back.jpg")}
-      />
-      <Text style={{ textAlign: "center", fontSize: 20 }}>
-        {phone} - {password}
-      </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.card}>
+        <Image
+          source={require('../../assets/img/back.jpg')}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>Нэвтрэх</Text>
 
-      <NInput
-        askeyboardType="number-pad"
-        placeholder="Та утасны дугааараа оруулна уу"
-        onChangeText={setPhone}
-      />
+        <TextInput
+          placeholder="Нэвтрэх нэр"
+          placeholderTextColor="#999"
+          style={styles.input}
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+        <TextInput
+          placeholder="Нууц үг"
+          placeholderTextColor="#999"
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <NInput
-        secureTextEntry={true}
-        placeholder="Нууц үгээ оруулна уу"
-        onChangeText={setPassword}
-      />
-
-      <NButton title="Нэвтрэх" onPress={loginHandler} />
-      <NButton title="Буцах" onPress={() => navigation.pop()} />
-    </View>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Нэвтрэх</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
-const css = StyleSheet.create({
-  inputField: {
-    borderBottomColor: "gray",
-    borderBottomWidth: 1,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    padding: 10
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f2f4f8', justifyContent: 'center', alignItems: 'center' },
+  card: {
+    width: '85%', backgroundColor: '#fff', padding: 24, borderRadius: 16,
+    shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12, elevation: 6, alignItems: 'center'
+  },
+  logo: { width: 80, height: 80, marginBottom: 16, borderRadius: 8 },
+  title: { fontSize: 22, fontWeight: '700', marginBottom: 20, color: '#2c3e50' },
+  input: {
+    width: '100%', backgroundColor: '#f1f3f6', borderRadius: 10,
+    paddingVertical: 12, paddingHorizontal: 16, fontSize: 16,
+    marginBottom: 14, color: '#333'
   },
   button: {
-    marginVertical: 5
-  }
+    width: '100%', backgroundColor: '#3498db', paddingVertical: 14,
+    borderRadius: 10, alignItems: 'center', marginTop: 8
+  },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' }
 });
